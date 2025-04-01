@@ -51,15 +51,6 @@ function bangBangControl(posX, posY, i, d) {
     return createVector(0, -1);
   }
   else {
-    return createVector(0, 0);
-  }
-}
-
-function bidirectionalBangBangControl(posX, posY, i, d) {
-  if (posY > 0) {
-    return createVector(0, -1);
-  }
-  else {
     return createVector(0, 1);
   }
 }
@@ -71,7 +62,7 @@ function proportionalControl(posX, posY, p, i, d) {
 function setup() {
   createCanvas(700, 700);
   frameRate(60);
-  drone = new Drone(0, 150, 0, 0, 1, 1/60, proportionalControl);
+  drone = new Drone(0, 150, 0, 0, 1, 1/60, bangBangControl);
   drone.setPhysicalForces(0, gravity);
 }
 
