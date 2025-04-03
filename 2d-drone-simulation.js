@@ -1,6 +1,6 @@
-gravity = -0;
+gravity = -50;
 drag_coeff = 0.1;
-arm_length = 0.1;
+arm_length = 0.01;
 class Drone {
   constructor(x, y, vx, vy, mass, dt, controlStrategy, rotStrategy) {
     this.position = createVector(x, y);
@@ -24,14 +24,15 @@ class Drone {
 
   setTotalForce() {
     let motor_out = this.controlStrategy(this.position.x, this.position.y) * this.motorPower;
-    this.cforce = createVector(motor_out * sin(this.angle), motor_out * cos(this.angle));
+    this.cforce = createVector(motor_out * -sin(this.angle), motor_out * cos(this.angle));
     this.force = p5.Vector.add(this.pforce, this.cforce);
     //calculate air resistance
     this.force.sub(p5.Vector.mult(this.velocity, drag_coeff));
   }
 
   setRotForce() {
-    let delta_angle = constrain(atan(-this.position.x, -this.position.y), -QUARTER_PI, QUARTER_PI) - this.angle;
+    let delta_angle = constrain(atan2(this.position.x, this.position.y), -QUARTER_PI, QUARTER_PI) - this.angle;
+    console.log(delta_angle * 180 / PI);
     this.rotForce = this.rotStrategy(delta_angle, this.position.y) * this.motorPower * arm_length;
     //calculate air resistance
     this.rotForce -= drag_coeff * this.angularSpeed;
@@ -39,12 +40,12 @@ class Drone {
   
   update() {
     //rotation
+    this.setDeltaTime()
+    this.setTotalForce()
     this.setRotForce();
     this.angularSpeed += this.rotForce * this.dt;
     this.angle += this.angularSpeed * this.dt;
     //movement
-    this.setDeltaTime()
-    this.setTotalForce()
     this.velocity.add(p5.Vector.mult(this.force, this.dt/this.mass));
     this.position.add(p5.Vector.mult(this.velocity, this.dt/this.mass));
   }
@@ -58,7 +59,9 @@ class Drone {
     translate(this.position.x, this.position.y);
     rotate(this.angle);
     fill("red");
-    rect(-100,-10, 200, 20);
+    rect(-100, 10, 200, -20);
+    fill("green");
+    triangle(-5, -4, 5, -4, 0, 5);
     pop();
   }
 }
@@ -82,7 +85,12 @@ function proportionalControl(posX, posY) {
 }
 function proportionalAngleControl(delta_angle, posY) {
   if (posY < 0) {
-    return delta_angle / QUARTER_PI;
+    if (delta_angle < 0) {
+      return delta_angle * 0.8 / HALF_PI - 0.2;
+    }
+    else if (delta_angle > 0) {
+      return delta_angle * 0.8 / HALF_PI + 0.2;
+    }
   }
   else {
     return 0;
@@ -92,7 +100,7 @@ function proportionalAngleControl(delta_angle, posY) {
 function setup() {
   createCanvas(700, 700);
   frameRate(60);
-  drone = new Drone(-100, -150, 0, 0, 1, 1/60, proportionalControl, proportionalAngleControl);
+  drone = new Drone(50, -150, 0, 0, 1, 1/60, proportionalControl, proportionalAngleControl);
   drone.setPhysicalForces(0, gravity);
 }
 
