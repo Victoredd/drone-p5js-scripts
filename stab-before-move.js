@@ -1,6 +1,7 @@
 angle_tolerance = 0.2;
-motorStrength = 100;
-rotCoeff = 0.5;
+motorStrength = 250;
+rotCoeff = 1;
+dragCoeff = 0.2;
 class Drone {
   constructor(x, y, angle) {
     this.position = createVector(x, y);
@@ -12,8 +13,6 @@ class Drone {
   }
 
   display() {
-    fill("blue");
-  circle(0, 0, 10);
     push();
     scale(1, -1);
     translate(this.position.x, this.position.y);
@@ -24,42 +23,43 @@ class Drone {
     triangle(-5, -4, 5, -4, 0, 5);
     pop();
     text(this.angle * 180 / PI, 20, 20)
+    fill("blue");
+    circle(0, 0, 10);
   }
 
     update() {
         let angle_to_center = abs(atan2(this.position.y, this.position.x) - HALF_PI);
-        text(atan2(this.position.y, this.position.x), 70, 80) //hole mole
         // pass off control to movement/angle depending on position
-        if (this.position.y > 0 && this.position.x > 0) {
+        if ((this.position.y > 0 && this.position.x > 0) || (this.position.x > 0 && this.position.x < 50)) {
             if (this.angle < (HALF_PI+0.1 + angle_tolerance/2) && this.angle > (HALF_PI+0.1 - angle_tolerance/2)) {
-                this.moveLogic("light");
+                (this.position.x < 50 && this.position.y < 0) ? this.moveLogic("heavy") : this.moveLogic("light");
             }
             else {
                 this.rotateLogic(HALF_PI+0.1);
             }
         }
-        else if (this.position.y > 0 && this.position.x < 0) {
+        else if ((this.position.y > 0 && this.position.x < 0) || (this.position.x < 0 && this.position.x > -50)) {
             if (this.angle < (HALF_PI-0.1 + angle_tolerance/2) && this.angle > (HALF_PI-0.1 - angle_tolerance/2)) {
-                this.moveLogic("light");
+                (this.position.x > -50 && this.position.y < 0) ? this.moveLogic("heavy") : this.moveLogic("light");
             }
             else {
                 this.rotateLogic(HALF_PI-0.1);
             }
         }
         else if (this.position.y < 0 && this.position.x < 0) {
-            if (this.angle < (HALF_PI - angle_to_center/2 + angle_tolerance/2) && this.angle > ((HALF_PI - angle_to_center/2 - angle_tolerance/2))) {
+            if (this.angle < (HALF_PI-0.5 + angle_tolerance/2) && this.angle > ((HALF_PI-0.5 - angle_tolerance/2))) {
                 this.moveLogic("heavy");
             }
             else {
-                this.rotateLogic(HALF_PI - angle_to_center/2);
+                this.rotateLogic(HALF_PI-0.5);
             }
         }
         else if (this.position.y < 0 && this.position.x > 0) {
-            if (this.angle < (HALF_PI + angle_to_center/2 + angle_tolerance/2) && this.angle > ((HALF_PI + angle_to_center/2 - angle_tolerance/2))) {
+            if (this.angle < (HALF_PI+0.5 + angle_tolerance/2) && this.angle > ((HALF_PI+0.5 - angle_tolerance/2))) {
                 this.moveLogic("heavy");
             }
             else {
-                this.rotateLogic(HALF_PI + angle_to_center/2);
+                this.rotateLogic(HALF_PI+0.5);
             }
         }
         //motors into forces
@@ -84,8 +84,8 @@ class Drone {
 
     moveLogic(mode) {
         if (mode === "light") {
-            this.motor1 = 0.2;
-            this.motor2 = 0.2;
+            this.motor1 = 0.1;
+            this.motor2 = 0.1;
         }
         else if (mode === "heavy") {
             this.motor1 = 1;
@@ -94,14 +94,26 @@ class Drone {
     }
 
     applyNaturalForces() {
+        // Gravity
         this.velocity.add(p5.Vector.mult(createVector(0, -50), deltaTime/1000)); //gravity
+        // Linear air drag
+        let drag = this.velocity.copy();
+        if (drag.mag() > 0) {
+            drag.normalize();
+            drag.mult(-dragCoeff * this.velocity.magSq());
+            this.velocity.add(p5.Vector.mult(drag, deltaTime / 1000));
+        }
+
+        // Rotational drag
+        let angularDrag = -dragCoeff * this.angularVelocity * abs(this.angularVelocity);
+        this.angularVelocity += angularDrag * deltaTime / 1000;
     }
 }
 
-ss
+
 function setup() {
   createCanvas(700, 700);
-  drone = new Drone(100, 200, HALF_PI);
+  drone = new Drone(100, -200, HALF_PI);
 }
 
 function draw() {
