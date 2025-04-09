@@ -10,6 +10,7 @@ class Drone {
     this.angularVelocity = 0;
     this.motor1 = 0;
     this.motor2 = 0;
+    this.natForces = createVector(0, 0);
   }
 
   display() {
@@ -22,7 +23,8 @@ class Drone {
     fill("green");
     triangle(-5, -4, 5, -4, 0, 5);
     pop();
-    text(this.angle * 180 / PI, 20, 20)
+    text("Angle: " + this.angle * 180 / PI, 20, 20)
+    text("Distance to Center: " + sqrt(this.position.x * this.position.x + this.position.y * this.position.y), 20, 40);
     fill("blue");
     circle(0, 0, 10);
   }
@@ -93,9 +95,15 @@ class Drone {
         }
     }
 
+    setForces(x, y) {
+        this.natForces.x = x;
+        this.natForces.y = y;
+    }
+
     applyNaturalForces() {
         // Gravity
-        this.velocity.add(p5.Vector.mult(createVector(0, -50), deltaTime/1000)); //gravity
+        this.velocity.add(p5.Vector.mult(createVector(0, -100), deltaTime/1000)); //gravity
+        this.velocity.add(p5.Vector.mult(this.natForces, deltaTime/1000)); //other forces
         // Linear air drag
         let drag = this.velocity.copy();
         if (drag.mag() > 0) {
@@ -104,7 +112,7 @@ class Drone {
             this.velocity.add(p5.Vector.mult(drag, deltaTime / 1000));
         }
 
-        // Rotational drag
+        // Rotational air drag
         let angularDrag = -dragCoeff * this.angularVelocity * abs(this.angularVelocity);
         this.angularVelocity += angularDrag * deltaTime / 1000;
     }
@@ -113,7 +121,8 @@ class Drone {
 
 function setup() {
   createCanvas(700, 700);
-  drone = new Drone(100, -200, HALF_PI);
+  drone = new Drone(300, 300, HALF_PI);
+  drone.setForces(10, 0);
 }
 
 function draw() {
