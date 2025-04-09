@@ -10,7 +10,8 @@ class Drone {
     this.angularVelocity = 0;
     this.motor1 = 0;
     this.motor2 = 0;
-    this.natForces = createVector(0, 0);
+    this.natForceX = createSlider(-50, 50, 0);
+    this.natForceY = createSlider(-50, 50, 0);
   }
 
   display() {
@@ -95,15 +96,10 @@ class Drone {
         }
     }
 
-    setForces(x, y) {
-        this.natForces.x = x;
-        this.natForces.y = y;
-    }
-
     applyNaturalForces() {
         // Gravity
         this.velocity.add(p5.Vector.mult(createVector(0, -100), deltaTime/1000)); //gravity
-        this.velocity.add(p5.Vector.mult(this.natForces, deltaTime/1000)); //other forces
+        this.velocity.add(p5.Vector.mult(createVector(this.natForceX.value(), this.natForceY.value()), deltaTime/1000)); //other forces
         // Linear air drag
         let drag = this.velocity.copy();
         if (drag.mag() > 0) {
@@ -122,7 +118,6 @@ class Drone {
 function setup() {
   createCanvas(700, 700);
   drone = new Drone(300, 300, HALF_PI);
-  drone.setForces(10, 0);
 }
 
 function draw() {
