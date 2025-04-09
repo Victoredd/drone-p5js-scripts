@@ -33,10 +33,7 @@ class Drone {
     update() {
         let angle_to_center = abs(atan2(this.position.y, this.position.x) - HALF_PI);
         // pass off control to movement/angle depending on position
-        if (this.position.x < 5 && this.position.x > -5) {
-            (this.angle < HALF_PI + angle_tolerance/2 && this.angle > HALF_PI - angle_tolerance/2) ? ((this.position.y < 0) ? this.moveLogic("heavy") : this.moveLogic("light")) : this.rotateLogic(HALF_PI);
-        }
-        else if ((this.position.y > 0 && this.position.x > 0) || (this.position.x > 0 && this.position.x < 50)) {
+        if ((this.position.y > 0 && this.position.x > 0) || (this.position.x > 0 && this.position.x < 50)) {
             if (this.angle < (HALF_PI+0.1 + angle_tolerance/2) && this.angle > (HALF_PI+0.1 - angle_tolerance/2)) {
                 (this.position.x < 50 && this.position.y < 0) ? this.moveLogic("heavy") : this.moveLogic("light");
             }
@@ -117,15 +114,10 @@ class Drone {
     }
 }
 
-function mouseClicked() {
-  drone.position.x = mouseX - width/2;
-  drone.position.y = -mouseY + height/2;
-}
-
 
 function setup() {
   createCanvas(700, 700);
-  drone = new Drone(30, 200, HALF_PI);
+  drone = new Drone(300, 300, HALF_PI);
 }
 
 function draw() {
