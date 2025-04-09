@@ -1,51 +1,46 @@
-class Rectangle {
-  constructor(x, y, w, h) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.desiredAngle = 0;
-    this.angle = 0;
-    this.angularSpeed = 0;
-    this.rotForce = 0;
-  }
-  update() {
-    this.setRotation()
-    this.angularSpeed += this.rotForce * deltaTime/1000;
-    this.angle += this.angularSpeed * deltaTime/1000;
-  }
-  display() {
-    push();
-    translate(width/2, height/2);
-    scale(1, -1);
-    rotate(this.angle);
-    fill("red");
-    rect(this.x - this.w/2, this.y + this.h/2, this.w, -this.h);
-    fill("green");
-    triangle(-5, -4, 5, -4, 0, 5);
-    pop();
-  }
-  setAngle(angle) {
-    this.desiredAngle = angle;
-  }
-  setRotation() {
-    if ((this.angle > this.desiredAngle-0.03) && (this.angle < this.desiredAngle+0.03)) {
-        this.rotForce = -50*this.angularSpeed;
-  }
-    else {
-      this.rotForce = (this.desiredAngle - this.angle);
-    }
-  }
-}
-
 function setup() {
-  createCanvas(700, 700);
-  drone = new Rectangle(0, 0, 200, 20);
-  drone.setAngle(HALF_PI);
+  createCanvas(500, 500);
+  angleMode(DEGREES); // Use degrees for easier interpretation
+  textAlign(LEFT, BOTTOM);
 }
 
 function draw() {
-    background(220);
-    drone.update();
-    drone.display();
+  background(240);
+
+  push();
+  translate(width / 2, height / 2);
+  scale(1, -1);
+
+  // Vector from center to mouse
+  let dx = mouseX - width / 2;
+  let dy = -(mouseY - height / 2); // Inverted due to flipped y-axis
+
+  push();
+  let angle = atan2(dy, dx);
+
+  // Triangle dimensions
+  let base = 40;
+  let triHeight = 200;
+
+  push();
+  rotate(angle); // Rotate the triangle to point at the mouse
+
+  // Draw triangle pointing right at angle 0
+  fill(100, 150, 255);
+  noStroke();
+  beginShape();
+  vertex(triHeight, 0);    // Tip of the triangle
+  vertex(0, -base / 2);    // Bottom-left
+  vertex(0, base / 2);     // Top-left
+  endShape(CLOSE);
+  pop();
+  pop();
+
+  // Draw text in normal (unflipped) space
+  push();
+  fill(0);
+  noStroke();
+  textSize(16);
+  text(`Angle: ${angle.toFixed(2)}°`, 10, triHeight - 10);
+  pop();
 }
