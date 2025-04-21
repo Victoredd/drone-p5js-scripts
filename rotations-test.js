@@ -8,12 +8,12 @@ function draw() {
   background(240);
 
   push();
-  translate(width / 2, height / 2);
+  translate(mouseX, mouseY);
   scale(1, -1);
 
-  // Vector from center to mouse
-  let dx = mouseX - width / 2;
-  let dy = -(mouseY - height / 2); // Inverted due to flipped y-axis
+  // Vector from mouse to center
+  let dx = width / 2 - mouseX;
+  let dy = -(height / 2 - mouseY); // Inverted due to flipped y-axis
 
   push();
   let angle = atan2(dy, dx);
@@ -36,11 +36,13 @@ function draw() {
   pop();
   pop();
 
-  // Draw text in normal (unflipped) space
+  // Draw text in normal (unflipped) space, centered on screen
+  pop(); // Restore to unflipped space
   push();
   fill(0);
   noStroke();
+  textAlign(CENTER, CENTER);
   textSize(16);
-  text(`Angle: ${angle.toFixed(2)}°`, 10, triHeight - 10);
+  text(`Angle: ${angle.toFixed(2)}°`, width / 2, height / 2);
   pop();
 }

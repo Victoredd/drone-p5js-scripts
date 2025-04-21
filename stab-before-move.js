@@ -1,6 +1,6 @@
 angle_tolerance = 0.2;
-motorStrength = 250;
-rotCoeff = 1;
+motorStrength = 500;
+rotCoeff = 0.8;
 dragCoeff = 0.2;
 class Drone {
   constructor(x, y, angle) {

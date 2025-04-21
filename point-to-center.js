@@ -1,6 +1,6 @@
 angle_tolerance = 0.2;
-motorStrength = 250;
-rotCoeff = 1;
+motorStrength = 500;
+rotCoeff = 0.8;
 dragCoeff = 0.2;
 class Drone {
   constructor(x, y, angle) {
@@ -31,46 +31,29 @@ class Drone {
   }
 
     update() {
-        let angle_to_center = abs(atan2(this.position.y, this.position.x) - HALF_PI);
-        // pass off control to movement/angle depending on position
-        if ((this.position.y > 0 && this.position.x > 0) || (this.position.x > 0 && this.position.x < 50)) {
-            if (this.angle < (HALF_PI+0.1 + angle_tolerance/2) && this.angle > (HALF_PI+0.1 - angle_tolerance/2)) {
-                (this.position.x < 50 && this.position.y < 0) ? this.moveLogic("heavy") : this.moveLogic("light");
-            }
-            else {
-                this.rotateLogic(HALF_PI+0.1);
-            }
-        }
-        else if ((this.position.y > 0 && this.position.x < 0) || (this.position.x < 0 && this.position.x > -50)) {
-            if (this.angle < (HALF_PI-0.1 + angle_tolerance/2) && this.angle > (HALF_PI-0.1 - angle_tolerance/2)) {
-                (this.position.x > -50 && this.position.y < 0) ? this.moveLogic("heavy") : this.moveLogic("light");
-            }
-            else {
-                this.rotateLogic(HALF_PI-0.1);
-            }
-        }
-        else if (this.position.y < 0 && this.position.x < 0) {
-            if (this.angle < (HALF_PI-0.5 + angle_tolerance/2) && this.angle > ((HALF_PI-0.5 - angle_tolerance/2))) {
-                this.moveLogic("heavy");
-            }
-            else {
-                this.rotateLogic(HALF_PI-0.5);
-            }
-        }
-        else if (this.position.y < 0 && this.position.x > 0) {
-            if (this.angle < (HALF_PI+0.5 + angle_tolerance/2) && this.angle > ((HALF_PI+0.5 - angle_tolerance/2))) {
-                this.moveLogic("heavy");
-            }
-            else {
-                this.rotateLogic(HALF_PI+0.5);
-            }
-        }
-        //motors into forces
-        this.velocity.add(p5.Vector.mult(createVector((this.motor1 + this.motor2)*cos(this.angle), (this.motor1 + this.motor2)*sin(this.angle)), motorStrength * deltaTime/1000));
-        this.angularVelocity += (this.motor2 - this.motor1) * rotCoeff * motorStrength * deltaTime/1000;
-        this.applyNaturalForces();
-        this.position.add(p5.Vector.mult(this.velocity, deltaTime/1000));
-        this.angle += this.angularVelocity * deltaTime/1000;
+      // Step 1: Rotate to face the center
+      let toCenter = p5.Vector.sub(createVector(0, 0), this.position);
+      let targetAngle = atan2(toCenter.y, toCenter.x);
+      let angleDiff = targetAngle - this.angle;
+      angleDiff = atan2(sin(angleDiff), cos(angleDiff)); // Normalize between -PI and PI
+
+      if (abs(angleDiff) > angle_tolerance) {
+        this.motor1 = angleDiff > 0 ? -0.1 : 0.1;
+        this.motor2 = angleDiff > 0 ? 0.1 : -0.1;
+      } else {
+        // Step 2: Move towards center with force proportional to distance
+        let distance = toCenter.mag();
+        let force = constrain(distance / 100, 0, 1); // Scale and cap the force
+        this.motor1 = force;
+        this.motor2 = force;
+      }
+
+      // Apply motor-based forces
+      this.velocity.add(p5.Vector.mult(createVector((this.motor1 + this.motor2)*cos(this.angle), (this.motor1 + this.motor2)*sin(this.angle)), motorStrength * deltaTime/1000));
+      this.angularVelocity += (this.motor2 - this.motor1) * rotCoeff * motorStrength * deltaTime/1000;
+      this.applyNaturalForces();
+      this.position.add(p5.Vector.mult(this.velocity, deltaTime/1000));
+      this.angle += this.angularVelocity * deltaTime/1000;
     }
 
     rotateLogic(rotateTo) {
@@ -114,10 +97,29 @@ class Drone {
     }
 }
 
+function mouseClicked() {
+  drone.position.x = mouseX - width/2;
+  drone.position.y = -mouseY + height/2;
+}
+
+
+function keyPressed() {
+    let step = 10;
+  
+    if (keyCode === LEFT_ARROW) {
+      drone.natForceX.value(drone.natForceX.value() - step);
+    } else if (keyCode === RIGHT_ARROW) {
+      drone.natForceX.value(drone.natForceX.value() + step);
+    } else if (keyCode === UP_ARROW) {
+      drone.natForceY.value(drone.natForceY.value() + step); // Positive Y
+    } else if (keyCode === DOWN_ARROW) {
+      drone.natForceY.value(drone.natForceY.value() - step); // Negative Y
+    }
+  }
 
 function setup() {
   createCanvas(700, 700);
-  drone = new Drone(300, 300, HALF_PI);
+  drone = new Drone(30, 200, HALF_PI);
 }
 
 function draw() {
